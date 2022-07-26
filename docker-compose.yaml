@@ -1,0 +1,34 @@
+version: '3'
+
+services:
+  fake-datadog:
+    build:
+      context: fake_datadog
+      dockerfile: Dockerfile
+    depends_on:
+      - fake-dd-mongo
+  fake-dd-mongo:
+    image: mongo:3.6.3
+  fake-dd-ui:
+    image: mongo-express
+    ports:
+      - 8081:8081
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=fake-dd-mongo
+    depends_on:
+      - fake-dd-mongo
+  ddagent:
+    image: gcr.io/datadoghq/agent:latest
+    depends_on:
+      - fake-datadog
+    environment:
+      - DD_API_KEY=xxxxxxxxxxxxxxxxxxxxx
+      - DD_DD_URL=http://fake-datadog
+      - DD_APM_DD_URL=http://fake-datadog
+      - DD_SITE=datadoghq.com
+    ports:
+      - 8126:8126
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
